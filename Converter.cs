@@ -6,72 +6,88 @@ namespace PKLConverter;
 
 class PKLConverter
 {
-    private string mgdbOpenPath;
-    private string mgdbSavePath;
-    private string pklOpenPath;
-    private string pklSavePath;
+    private string wcType;
     
-    public PKLConverter(string mgdbOpenPath, string mgdbSavePath, string pklOpenPath, string pklSavePath)
+    public PKLConverter(string wcType)
     {
-        this.mgdbOpenPath = mgdbOpenPath;
-        this.mgdbSavePath = mgdbSavePath;
-        this.pklOpenPath = pklOpenPath;
-        this.pklSavePath = pklSavePath;
+        this.wcType = wcType;
     }
 
-    // public static readonly PCD[] MGDB_G4 = GetPCDDB(Util.GetBinaryResource("wc4.pkl"));
+    
+    public PCD[] MGDB_G4(string pklOpenPath) => EncounterEvent.GetPCDDB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 5</summary>
-    // public static readonly PGF[] MGDB_G5 = GetPGFDB(Util.GetBinaryResource("pgf.pkl"));
+    /// <summary>Event Database for Generation 5</summary>
+    public PGF[] MGDB_G5(string pklOpenPath) => EncounterEvent.GetPGFDB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 6</summary>
-    // public static readonly WC6[] MGDB_G6 = GetWC6DB(Util.GetBinaryResource("wc6.pkl"), Util.GetBinaryResource("wc6full.pkl"));
+    /// <summary>Event Database for Generation 6</summary>
+   // public WC6[] MGDB_G6(string pklOpenPath) => EncounterEvent.GetWC6DB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 7</summary>
-    // public static readonly WC7[] MGDB_G7 = GetWC7DB(Util.GetBinaryResource("wc7.pkl"), Util.GetBinaryResource("wc7full.pkl"));
+    /// <summary>Event Database for Generation 7</summary>
+    //public WC7[] MGDB_G7(string pklOpenPath) => EncounterEvent.GetWC7DB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 7 <see cref="GameVersion.GG"/></summary>
-    // public static readonly WB7[] MGDB_G7GG = GetWB7DB(Util.GetBinaryResource("wb7full.pkl"));
+    /// <summary>Event Database for Generation 7 <see cref="GameVersion.GG"/></summary>
+    public WB7[] MGDB_G7GG(string pklOpenPath) => EncounterEvent.GetWB7DB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 8</summary>
-    // public static readonly WC8[] MGDB_G8 = GetWC8DB(Util.GetBinaryResource("wc8.pkl"));
+    /// <summary>Event Database for Generation 8</summary>
+    public WC8[] MGDB_G8(string pklOpenPath) => EncounterEvent.GetWC8DB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 8 <see cref="GameVersion.PLA"/></summary>
-    // public static readonly WA8[] MGDB_G8A = GetWA8DB(Util.GetBinaryResource("wa8.pkl"));
+    /// <summary>Event Database for Generation 8 <see cref="GameVersion.PLA"/></summary>
+    public WA8[] MGDB_G8A(string pklOpenPath) => EncounterEvent.GetWA8DB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 8 <see cref="GameVersion.BDSP"/></summary>
-    // public static readonly WB8[] MGDB_G8B = GetWB8DB(Util.GetBinaryResource("wb8.pkl"));
+    /// <summary>Event Database for Generation 8 <see cref="GameVersion.BDSP"/></summary>
+    public WB8[] MGDB_G8B(string pklOpenPath) => EncounterEvent.GetWB8DB(File.ReadAllBytes(pklOpenPath));
 
-    // /// <summary>Event Database for Generation 9 <see cref="GameVersion.SV"/></summary>
-    public WC9[] MGDB_G9 => EncounterEvent.GetWC9DB(File.ReadAllBytes(this.pklOpenPath));
+    /// <summary>Event Database for Generation 9 <see cref="GameVersion.SV"/></summary>
+    public WC9[] MGDB_G9(string pklOpenPath) => EncounterEvent.GetWC9DB(File.ReadAllBytes(pklOpenPath));
 
-    public void ToMGDB(string pklType)
+    public void UnPack(string pklOpenPath, string wcsSavePath)
     {
-        MessageBox.Show($"pklType={pklType}");
-        if (pklType == "wc9") 
+        DataMysteryGift[] wcArray = this.wcType.ToUpper() switch
         {
-            foreach (WC9 wc9 in MGDB_G9)
-            {
-                File.WriteAllBytesAsync(Path.Join(mgdbSavePath, $"{wc9.CardID}.wc9"), wc9.Data);
-            }
-            
-        }
-    }
-
-    public void ToPKL(string pklType)
-    {
-        string[] files = Directory.GetFiles(mgdbOpenPath);
-        byte[] wc = [];
-        foreach (string file in files)
-        {
-            if (!file.Contains(pklType))
-                continue;
-            wc = wc.Concat(File.ReadAllBytes(file)).ToArray();
-            
-        }
-        File.WriteAllBytesAsync(Path.Join(pklSavePath, $"new{pklType}.pkl"), wc);
+            "WC9" => MGDB_G9(pklOpenPath),
+            "WB8" => MGDB_G8(pklOpenPath),
+            "WA8" => MGDB_G8A(pklOpenPath),
+            "WC8" => MGDB_G8(pklOpenPath),
+            "WB7" => MGDB_G7GG(pklOpenPath),
+            // "WC7" => MGDB_G7(pklOpenPath),
+            // "WC6" => MGDB_G6(pklOpenPath),
+            "PGF" => MGDB_G5(pklOpenPath),
+            "PCD" => MGDB_G4(pklOpenPath),
+            _ => MGDB_G9(pklOpenPath),
+        };
 
         
+        int unPackCount = 0;
+        foreach (var wc in wcArray)  
+        {
+            string fildPath = $"({unPackCount})# {wc.CardID}.{this.wcType.ToLower()}";
+            File.WriteAllBytesAsync(Path.Join(wcsSavePath, fildPath), wc.Data);
+            unPackCount ++ ;
+            //MessageBox.Show(fildPath);
+        }
+        MessageBox.Show("PKL解包完毕！");
+        MessageBox.Show($"本次解包{wcArray.Count()}个{this.wcType.ToUpper()}文件！实际保存{unPackCount}个{this.wcType.ToUpper()}文件！");
+        
+    }
+
+    public void Pack(string[] WCOpenPaths, string pklSavePath)
+    {
+        byte[] wc = [];
+        int packCount = 0;
+        foreach (string wcFile in WCOpenPaths)
+        {
+            if (!wcFile.Contains(this.wcType.ToLower()))
+            {
+                MessageBox.Show($"{wcFile}处理失败！");
+                continue;
+            }
+                
+            wc = wc.Concat(File.ReadAllBytes(wcFile)).ToArray();
+            packCount ++;
+        }
+        File.WriteAllBytesAsync(Path.Join(pklSavePath, $"{this.wcType.ToUpper()}(new).pkl"), wc);
+        MessageBox.Show("PKL打包完成！");
+        MessageBox.Show($"本次传入{WCOpenPaths.Count()}个{this.wcType.ToUpper()}文件，成功打包{packCount}个{this.wcType.ToUpper()}文件为PKL！");
     }
 }
 
